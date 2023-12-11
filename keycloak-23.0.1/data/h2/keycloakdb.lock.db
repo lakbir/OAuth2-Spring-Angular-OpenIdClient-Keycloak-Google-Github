@@ -1,0 +1,6 @@
+#FileLock
+#Mon Dec 11 23:37:32 CET 2023
+server=192.168.222.238\:51133
+hostName=host.docker.internal
+method=file
+id=18c5b072fc9f7e6707f21f7caa7cdb444cc7c2e5e43
