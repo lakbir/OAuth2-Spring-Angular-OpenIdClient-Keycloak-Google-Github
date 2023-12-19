@@ -20,6 +20,4 @@ public class ProductRestController {
     public List<Product> products(){
         return productRepository.findAll();
     }
-
-
 }
