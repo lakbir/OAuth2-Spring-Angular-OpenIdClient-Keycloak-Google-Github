@@ -12,21 +12,20 @@
         <li class="nav-item">
           <a class="nav-link active" aria-current="page" routerLink="customers">Customers</a>
         </li>
-        <li class="nav-item">
+        <li class="nav-item" *ngIf="keycloakService.getUserRoles().includes('ADMIN')">
           <a class="nav-link active" aria-current="page" routerLink="/products">Products</a>
         </li>
       </ul>
       <ul class="navbar">
-
         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-          <span *ngIf="securityService.profile" >{{securityService.profile.firstName}}</span>
-          <span *ngIf="!securityService.profile" >Login</span>
+          <span *ngIf="profile ; else not_logged_in" >{{profile.username}}</span>
+          <ng-template #not_logged_in>Login</ng-template>
         </a>
         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-          <li><a class="dropdown-item" (click)="login()">Login</a></li>
-          <li><a class="dropdown-item" (click)="onLogout()">Logout</a></li>
-          <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" routerLink="profile">Profile</a></li>
+          <li *ngIf="!keycloakService.isLoggedIn()"><a class="dropdown-item clickable" (click)="login()">Login</a></li>
+          <li *ngIf="keycloakService.isLoggedIn()"><a class="dropdown-item clickable" (click)="onLogout()">Logout</a></li>
+          <li *ngIf="keycloakService.isLoggedIn()"><hr class="dropdown-divider"></li>
+          <li *ngIf="keycloakService.isLoggedIn()"><a class="dropdown-item" routerLink="profile">Profile</a></li>
         </ul>
       </ul>
 
