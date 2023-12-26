@@ -32,6 +32,7 @@ services:
       - '8098:8098'
     expose:
       - '8098'
+    restart: always
     depends_on:
       mysql-db-inventory:
         condition: service_healthy
@@ -41,7 +42,7 @@ services:
     image: postgres
     container_name: postgres-service
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_s:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: keycloak_db
       POSTGRES_USER: keycloak
@@ -58,13 +59,17 @@ services:
     restart: always
     ports:
       - "8888:80"
+    expose:
+      - "8888"
     environment:
-      PGADMIN_DEFAULT_EMAIL: med@gmail.com
-      PGADMIN_DEFAULT_PASSWORD: azer
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-med@gmail.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-1234}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
     volumes:
       - pgadmin_data:/var/lib/pgadmin
   keycloak:
-    image: quay.io/keycloak/keycloak:latest
+    image: quay.io/keycloak/keycloak:23.0.1
+    container_name: keycloak
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres-service:5432/keycloak_db
@@ -82,8 +87,38 @@ services:
     expose:
       - '8080'
     depends_on:
-      - postgres-service
+      postgres-service:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "http://localhost:8080/auth/realms/master" ]
+      interval: 60s
+      timeout: 20s
+      retries: 25
+  customer-thymeleaf-service:
+    build: ./customer-front-thymeleaf-app
+    container_name: customer-thymeleaf-service
+    ports:
+      - '8090:8090'
+    expose:
+      - '8090'
+    restart: always
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    environment:
+      - KEYCLOAK_REDIRECT_URI=http://localhost:8090/login/oauth2/code/sdia-customer-client
+      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/sdia-realm
+      - KEYCLOAK_AUTH=http://localhost:8080/realms/sdia-realm/protocol/openid-connect/auth
+      - KEYCLOAK_AUTH_TOKEN=http://localhost:8080/realms/sdia-realm/protocol/openid-connect/token
+  angular-front:
+    build: ./customer-front-angular-app
+    container_name: angular-front
+    ports:
+      - '8085:80'
+    expose:
+      - '8085'
+    restart: always
 volumes:
   mysql_data:
-  postgres_data:
+  postgres_data_s:
   pgadmin_data:
